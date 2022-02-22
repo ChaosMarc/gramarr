@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"path/filepath"
 	"strings"
 	"time"
@@ -10,11 +11,19 @@ import (
 )
 
 func Send(bot *tb.Bot, to tb.Recipient, msg string) {
-	bot.Send(to, msg, tb.ModeMarkdown)
+	_, err := bot.Send(to, msg, tb.ModeMarkdown)
+	if err != nil {
+		log.Fatalf("message send error: %v", err)
+		return
+	}
 }
 
 func SendError(bot *tb.Bot, to tb.Recipient, msg string) {
-	bot.Send(to, msg, tb.ModeMarkdown)
+	_, err := bot.Send(to, msg, tb.ModeMarkdown)
+	if err != nil {
+		log.Fatalf("message send error: %v", err)
+		return
+	}
 }
 
 func SendAdmin(bot *tb.Bot, to []User, msg string) {
@@ -32,15 +41,23 @@ func SendKeyboardList(bot *tb.Bot, to tb.Recipient, msg string, list []string) {
 		replyKeys = append(replyKeys, []tb.ReplyButton{b})
 	}
 
-	bot.Send(to, msg, &tb.ReplyMarkup{
+	_, err := bot.Send(to, msg, &tb.ReplyMarkup{
 		ReplyKeyboard:   replyKeys,
 		OneTimeKeyboard: true,
 	})
+	if err != nil {
+		log.Fatalf("message send error: %v", err)
+		return
+	}
 }
 
 func SendMany(bot *tb.Bot, to []User, msg string) {
 	for _, user := range to {
-		bot.Send(user, msg, tb.ModeMarkdown)
+		_, err := bot.Send(user, msg, tb.ModeMarkdown)
+		if err != nil {
+			log.Fatalf("message send error: %v", err)
+			return
+		}
 	}
 }
 
@@ -57,13 +74,6 @@ func EscapeMarkdown(s string) string {
 	s = strings.Replace(s, "]", "\\]", -1)
 	s = strings.Replace(s, "_", "\\_", -1)
 	return s
-}
-
-func BoolToYesOrNo(condition bool) string {
-	if condition {
-		return "Yes"
-	}
-	return "No"
 }
 
 func FormatDate(t time.Time) string {

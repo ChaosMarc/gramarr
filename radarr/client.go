@@ -46,7 +46,6 @@ func NewClient(c Config) (*Client, error) {
 }
 
 func createApiURL(c Config) string {
-	c.Hostname = strings.TrimPrefix(c.Hostname, "http://")
 	c.Hostname = strings.TrimPrefix(c.Hostname, "https://")
 	c.URLBase = strings.TrimPrefix(c.URLBase, "/")
 

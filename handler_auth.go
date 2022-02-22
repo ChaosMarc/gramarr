@@ -31,7 +31,11 @@ func (e *Env) HandleAuth(m *tb.Message) {
 	if pass == e.Config.Bot.AdminPassword {
 		if exists {
 			user.Access = UAAdmin
-			e.Users.Update(user)
+			err := e.Users.Update(user)
+			if err != nil {
+				Send(e.Bot, m.Sender, "Error during user update")
+				return
+			}
 		} else {
 			newUser := User{
 				ID:        m.Sender.ID,
@@ -40,7 +44,11 @@ func (e *Env) HandleAuth(m *tb.Message) {
 				Username:  m.Sender.Username,
 				Access:    UAAdmin,
 			}
-			e.Users.Create(newUser)
+			err := e.Users.Create(newUser)
+			if err != nil {
+				Send(e.Bot, m.Sender, "Error during user creation")
+				return
+			}
 		}
 
 		// Notify User
@@ -71,7 +79,11 @@ func (e *Env) HandleAuth(m *tb.Message) {
 			LastName:  m.Sender.LastName,
 			Access:    UAMember,
 		}
-		e.Users.Create(newUser)
+		err := e.Users.Create(newUser)
+		if err != nil {
+			Send(e.Bot, m.Sender, "Error during user creation")
+			return
+		}
 
 		// Notify User
 		msg = append(msg, "You have been authorized.")

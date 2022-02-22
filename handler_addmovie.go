@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 
@@ -243,7 +244,11 @@ func (c *AddMovieConversation) AddMovie(m *tb.Message) {
 	c.selectedMovie.RemotePoster = c.env.Radarr.GetPosterURL(*c.selectedMovie)
 	if c.selectedMovie.RemotePoster != "" {
 		photo := &tb.Photo{File: tb.FromURL(c.selectedMovie.RemotePoster)}
-		c.env.Bot.Send(m.Sender, photo)
+		_, err := c.env.Bot.Send(m.Sender, photo)
+		if err != nil {
+			log.Fatalf("message send error: %v", err)
+			return
+		}
 	}
 
 	// Notify User

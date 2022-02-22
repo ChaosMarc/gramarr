@@ -32,7 +32,7 @@
 
 ## Configuration
 
-- Copy the `config.json.template` file to `config.json` and set-up your configuration;
+- Copy the `config.json.template` file to `config.json` and set up your configuration;
 
 #### If running from downloaded binaries
 - Put the copied `config.json` alongside with the binary downloaded from [releases](https://github.com/alcmoraes/gramarr/releases);

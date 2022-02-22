@@ -32,12 +32,18 @@ func LoadConfig(configDir string) (*Config, error) {
 	file, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		log.Fatalf("config load error: %v", err)
+		return nil, err
 	}
 	var c Config
-	json.Unmarshal(file, &c)
+	err = json.Unmarshal(file, &c)
+	if err != nil {
+		log.Fatalf("config unmarshal error: %v", err)
+		return nil, err
+	}
 	return &c, nil
 }
 
 func ValidateConfig(c *Config) error {
+	// TODO Validate Config
 	return nil
 }

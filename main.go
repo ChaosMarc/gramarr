@@ -37,7 +37,7 @@ func main() {
 
 	err = ValidateConfig(conf)
 	if err != nil {
-		log.Fatal("config error: %v", err)
+		log.Fatalf("config error: %v", err)
 	}
 
 	userPath := filepath.Join(*configDir, "users.json")
@@ -84,7 +84,11 @@ func main() {
 	}
 
 	setupHandlers(router, env)
-	fmt.Fprintf(os.Stdout, "Gramarr is up and running. Go call your bot!\n")
+	_, err = fmt.Fprintf(os.Stdout, "Gramarr is up and running. Go call your bot!\n")
+	if err != nil {
+		log.Fatalf("failed to setup handlers: %v", err)
+		return
+	}
 	bot.Start()
 }
 

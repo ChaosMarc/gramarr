@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 
@@ -336,7 +337,11 @@ func (c *AddTVShowConversation) AddTVShow(m *tb.Message) {
 	c.selectedTVShow.RemotePoster = c.env.Sonarr.GetPosterURL(*c.selectedTVShow)
 	if c.selectedTVShow.RemotePoster != "" {
 		photo := &tb.Photo{File: tb.FromURL(c.selectedTVShow.RemotePoster)}
-		c.env.Bot.Send(m.Sender, photo)
+		_, err = c.env.Bot.Send(m.Sender, photo)
+		if err != nil {
+			log.Fatalf("message send error: %v", err)
+			return
+		}
 	}
 
 	// Notify User
