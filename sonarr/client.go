@@ -33,12 +33,14 @@ func NewClient(c Config) (*Client, error) {
 	}
 
 	client := Client{
-		apiKey:     c.APIKey,
-		maxResults: c.MaxResults,
-		username:   c.Username,
-		password:   c.Password,
-		baseURL:    baseURL,
-		client:     r,
+		apiKey:             c.APIKey,
+		maxResults:         c.MaxResults,
+		username:           c.Username,
+		password:           c.Password,
+		baseURL:            baseURL,
+		restrictedFolders:  c.RestrictedFolders,
+		restrictedProfiles: c.RestrictedProfiles,
+		client:             r,
 	}
 	return &client, nil
 }
@@ -69,12 +71,14 @@ func createApiURL(c Config) string {
 }
 
 type Client struct {
-	apiKey     string
-	username   string
-	password   string
-	baseURL    string
-	maxResults int
-	client     *resty.Client
+	apiKey             string
+	username           string
+	password           string
+	baseURL            string
+	maxResults         int
+	restrictedFolders  []int
+	restrictedProfiles []int
+	client             *resty.Client
 }
 
 func (c *Client) DeleteTVShow(tvShowId int) (err error) {
@@ -104,13 +108,22 @@ func (c *Client) SearchTVShows(term string) ([]TVShow, error) {
 	return tvShows, nil
 }
 
-func (c *Client) GetFolders() ([]Folder, error) {
+func (c *Client) GetFolders(isAdmin bool) (folders []Folder, err error) {
 	resp, err := c.client.R().SetResult([]Folder{}).Get("rootfolder")
 	if err != nil {
 		return nil, err
 	}
 
-	folders := *resp.Result().(*[]Folder)
+	allFolders := *resp.Result().(*[]Folder)
+	if isAdmin {
+		return allFolders, nil
+	}
+
+	for _, folder := range allFolders {
+		if !contains(c.restrictedFolders, folder.ID) {
+			folders = append(folders, folder)
+		}
+	}
 	return folders, nil
 }
 
@@ -136,21 +149,20 @@ func (c *Client) GetSystemStatus() (SystemStatus, error) {
 	return systemStatus, nil
 }
 
-func (c *Client) AddTVShow(m TVShow, languageProfile int, qualityProfile int, path string, requester string) (tvShow TVShow, err error) {
+func (c *Client) AddTVShow(m TVShow, qualityProfile int, path string, requester string) (tvShow TVShow, err error) {
 
 	request := AddTVShowRequest{
-		Title:             m.Title,
-		TitleSlug:         m.TitleSlug,
-		Images:            m.Images,
-		QualityProfileID:  qualityProfile,
-		LanguageProfileID: languageProfile,
-		TVDBID:            m.TvdbID,
-		RootFolderPath:    path,
-		Monitored:         true,
-		SeasonFolder:      true,
-		Year:              m.Year,
-		Seasons:           m.Seasons,
-		AddOptions:        AddTVShowOptions{SearchForMissingEpisodes: true},
+		Title:            m.Title,
+		TitleSlug:        m.TitleSlug,
+		Images:           m.Images,
+		QualityProfileID: qualityProfile,
+		TVDBID:           m.TvdbID,
+		RootFolderPath:   path,
+		Monitored:        true,
+		SeasonFolder:     true,
+		Year:             m.Year,
+		Seasons:          m.Seasons,
+		AddOptions:       AddTVShowOptions{SearchForMissingEpisodes: true},
 	}
 
 	tag, err := c.GetTagByLabel(requester, true)
@@ -326,4 +338,13 @@ func (c *Client) GetPosterURL(tvShow TVShow) string {
 		}
 	}
 	return ""
+}
+
+func contains(s []int, e int) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
 }

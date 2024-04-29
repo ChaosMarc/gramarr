@@ -216,6 +216,7 @@ func (c *Client) GetFolders(isAdmin bool) (folders []Folder, err error) {
 	if err != nil {
 		return nil, err
 	}
+
 	allFolders := *resp.Result().(*[]Folder)
 	if isAdmin {
 		return allFolders, nil

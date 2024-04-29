@@ -59,14 +59,15 @@ func (c *MovieDetailsConversation) showMovieDetails(m *tb.Message) Handler {
 	msg = append(msg, fmt.Sprintf("*%s (%d)*", EscapeMarkdown(c.movie.Title), c.movie.Year))
 	msg = append(msg, c.movie.Overview)
 	msg = append(msg, "")
-	msg = append(msg, fmt.Sprintf("*Cinema Date:* %s", FormatDate(c.movie.InCinemas)))
-	msg = append(msg, fmt.Sprintf("*BluRay Date:* %s", FormatDate(c.movie.PhysicalRelease)))
-	msg = append(msg, fmt.Sprintf("*Folder:* %s", GetRootFolderFromPath(c.movie.Path)))
+	msg = append(msg, fmt.Sprintf("*Cinema Release:* %s", FormatDate(c.movie.InCinemas)))
+	msg = append(msg, fmt.Sprintf("*Digital Release:* %s", FormatDate(c.movie.DigitalRelease)))
+	msg = append(msg, fmt.Sprintf("*BluRay Release:* %s", FormatDate(c.movie.PhysicalRelease)))
+	msg = append(msg, fmt.Sprintf("*Plex Library:* %s", GetRootFolderFromPath(c.movie.Path)))
 	if c.movie.HasFile {
 		msg = append(msg, fmt.Sprintf("*Downloaded:* %s", FormatDateTime(c.movie.MovieFile.DateAdded)))
 		msg = append(msg, fmt.Sprintf("*File:* %s", c.movie.MovieFile.RelativePath))
 	} else {
-		msg = append(msg, "*Downloaded:* No")
+		msg = append(msg, "*Downloaded:* Not yet")
 	}
 	requesterList := c.env.Radarr.GetRequesterList(c.movie)
 	msg = append(msg, fmt.Sprintf("*Requested by:* %s", strings.Join(requesterList, ", ")))

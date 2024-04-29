@@ -22,16 +22,16 @@ func NewAddTVShowConversation(e *Env) *AddTVShowConversation {
 }
 
 type AddTVShowConversation struct {
-	currentStep             Handler
-	TVQuery                 string
-	TVShowResults           []sonarr.TVShow
-	folderResults           []sonarr.Folder
-	selectedTVShow          *sonarr.TVShow
-	selectedTVShowSeasons   []sonarr.TVShowSeason
-	selectedQualityProfile  *sonarr.Profile
-	selectedLanguageProfile *sonarr.Profile
-	selectedFolder          *sonarr.Folder
-	env                     *Env
+	currentStep            Handler
+	TVQuery                string
+	TVShowResults          []sonarr.TVShow
+	folderResults          []sonarr.Folder
+	selectedTVShow         *sonarr.TVShow
+	selectedTVShowSeasons  []sonarr.TVShowSeason
+	selectedQualityProfile *sonarr.Profile
+	selectedFolder         *sonarr.Folder
+	user                   User
+	env                    *Env
 }
 
 func (c *AddTVShowConversation) Run(m *tb.Message) {
@@ -47,6 +47,8 @@ func (c *AddTVShowConversation) CurrentStep() Handler {
 }
 
 func (c *AddTVShowConversation) AskTVShow(m *tb.Message) Handler {
+	c.user, _ = c.env.Users.User(m.Sender.ID)
+
 	Send(c.env.Bot, m.Sender, "What TV Show do you want to search for?")
 
 	return func(m *tb.Message) {
@@ -224,52 +226,13 @@ func (c *AddTVShowConversation) AskPickTVShowQuality(m *tb.Message) Handler {
 			return
 		}
 
-		c.currentStep = c.AskPickTVShowLanguage(m)
-	}
-}
-
-func (c *AddTVShowConversation) AskPickTVShowLanguage(m *tb.Message) Handler {
-
-	languages, err := c.env.Sonarr.GetProfile("languageprofile")
-
-	// GetProfile Service Failed
-	if err != nil {
-		SendError(c.env.Bot, m.Sender, "Failed to get language profiles.")
-		c.env.CM.StopConversation(c)
-		return nil
-	}
-
-	// Send custom reply keyboard
-	var options []string
-	for _, LanguageProfile := range languages {
-		options = append(options, fmt.Sprintf("%v", LanguageProfile.Name))
-	}
-	options = append(options, "/cancel")
-	SendKeyboardList(c.env.Bot, m.Sender, "Which language shall I look for?", options)
-
-	return func(m *tb.Message) {
-		// Set the selected option
-		for i, opt := range options {
-			if m.Text == opt {
-				c.selectedLanguageProfile = &languages[i]
-				break
-			}
-		}
-
-		// Not a valid selection
-		if c.selectedLanguageProfile == nil {
-			SendError(c.env.Bot, m.Sender, "Invalid selection.")
-			c.currentStep = c.AskPickTVShowLanguage(m)
-			return
-		}
-
 		c.currentStep = c.AskFolder(m)
 	}
 }
 
 func (c *AddTVShowConversation) AskFolder(m *tb.Message) Handler {
 
-	folders, err := c.env.Sonarr.GetFolders()
+	folders, err := c.env.Sonarr.GetFolders(c.user.IsAdmin())
 	c.folderResults = folders
 
 	// GetFolders Service Failed
@@ -283,6 +246,13 @@ func (c *AddTVShowConversation) AskFolder(m *tb.Message) Handler {
 	if len(folders) == 0 {
 		SendError(c.env.Bot, m.Sender, "No destination folders found.")
 		c.env.CM.StopConversation(c)
+		return nil
+	}
+
+	if len(folders) == 1 {
+		Send(c.env.Bot, m.Sender, fmt.Sprintf("Folder '%s' has automatically been selected", strings.Title(EscapeMarkdown(filepath.Base(folders[0].Path)))))
+		c.selectedFolder = &folders[0]
+		c.AddTVShow(m)
 		return nil
 	}
 
@@ -325,7 +295,7 @@ func (c *AddTVShowConversation) AskFolder(m *tb.Message) Handler {
 }
 
 func (c *AddTVShowConversation) AddTVShow(m *tb.Message) {
-	_, err := c.env.Sonarr.AddTVShow(*c.selectedTVShow, c.selectedLanguageProfile.ID, c.selectedQualityProfile.ID, c.selectedFolder.Path, GetUserName(m))
+	_, err := c.env.Sonarr.AddTVShow(*c.selectedTVShow, c.selectedQualityProfile.ID, c.selectedFolder.Path, GetUserName(m))
 
 	// Failed to add TV
 	if err != nil {

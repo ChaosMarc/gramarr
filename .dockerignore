@@ -18,4 +18,4 @@
 full-setup
 dist
 bin
-users.json
+config/users.json

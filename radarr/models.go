@@ -8,6 +8,7 @@ import (
 type Movie struct {
 	Added               time.Time    `json:"added,omitempty"`
 	CleanTitle          string       `json:"cleanTitle,omitempty"`
+	DigitalRelease      time.Time    `json:"digitalRelease,omitempty"`
 	FolderName          string       `json:"folderName,omitempty"`
 	Genres              []string     `json:"genres,omitempty"`
 	HasFile             bool         `json:"hasFile,omitempty"`
