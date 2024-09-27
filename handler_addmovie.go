@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"strconv"
 	"strings"
 
@@ -196,8 +197,9 @@ func (c *AddMovieConversation) AskFolder(m *tb.Message) Handler {
 		return nil
 	}
 
+	titleCase := cases.Title(language.English)
 	if len(folders) == 1 {
-		Send(c.env.Bot, m.Sender, fmt.Sprintf("Folder '%s' has automatically been selected", strings.Title(EscapeMarkdown(filepath.Base(folders[0].Path)))))
+		Send(c.env.Bot, m.Sender, fmt.Sprintf("Folder '%s' has automatically been selected", titleCase.String(EscapeMarkdown(filepath.Base(folders[0].Path)))))
 		c.selectedFolder = &folders[0]
 		c.AddMovie(m)
 		return nil
@@ -206,7 +208,7 @@ func (c *AddMovieConversation) AskFolder(m *tb.Message) Handler {
 	// Send the results
 	var options []string
 	for _, folder := range folders {
-		options = append(options, strings.Title(fmt.Sprintf("%s", filepath.Base(folder.Path))))
+		options = append(options, titleCase.String(fmt.Sprintf("%s", filepath.Base(folder.Path))))
 	}
 	options = append(options, "/cancel")
 	SendKeyboardList(c.env.Bot, m.Sender, "Select a folder", options)
@@ -241,15 +243,15 @@ func (c *AddMovieConversation) AddMovie(m *tb.Message) {
 		return
 	}
 
-	c.selectedMovie.RemotePoster = c.env.Radarr.GetPosterURL(*c.selectedMovie)
-	if c.selectedMovie.RemotePoster != "" {
-		photo := &tb.Photo{File: tb.FromURL(c.selectedMovie.RemotePoster)}
-		_, err := c.env.Bot.Send(m.Sender, photo)
-		if err != nil {
-			log.Fatalf("message send error: %v", err)
-			return
-		}
-	}
+	//c.selectedMovie.RemotePoster = c.env.Radarr.GetPosterURL(*c.selectedMovie)
+	//if c.selectedMovie.RemotePoster != "" {
+	//	photo := &tb.Photo{File: tb.FromURL(c.selectedMovie.RemotePoster)}
+	//	_, err := c.env.Bot.Send(m.Sender, photo)
+	//	if err != nil {
+	//		log.Fatalf("message send error: %v", err)
+	//		return
+	//	}
+	//}
 
 	// Notify User
 	Send(c.env.Bot, m.Sender, "Movie has been added!")

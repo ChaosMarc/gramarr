@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"strconv"
 	"strings"
 
@@ -249,8 +250,9 @@ func (c *AddTVShowConversation) AskFolder(m *tb.Message) Handler {
 		return nil
 	}
 
+	titleCase := cases.Title(language.English)
 	if len(folders) == 1 {
-		Send(c.env.Bot, m.Sender, fmt.Sprintf("Folder '%s' has automatically been selected", strings.Title(EscapeMarkdown(filepath.Base(folders[0].Path)))))
+		Send(c.env.Bot, m.Sender, fmt.Sprintf("Folder '%s' has automatically been selected", titleCase.String(EscapeMarkdown(filepath.Base(folders[0].Path)))))
 		c.selectedFolder = &folders[0]
 		c.AddTVShow(m)
 		return nil
@@ -269,7 +271,7 @@ func (c *AddTVShowConversation) AskFolder(m *tb.Message) Handler {
 	// Send the custom reply keyboard
 	var options []string
 	for _, folder := range folders {
-		options = append(options, fmt.Sprintf("%s", filepath.Base(folder.Path)))
+		options = append(options, titleCase.String(fmt.Sprintf("%s", filepath.Base(folder.Path))))
 	}
 	options = append(options, "/cancel")
 	SendKeyboardList(c.env.Bot, m.Sender, "Which folder should it download to?", options)
@@ -304,15 +306,15 @@ func (c *AddTVShowConversation) AddTVShow(m *tb.Message) {
 		return
 	}
 
-	c.selectedTVShow.RemotePoster = c.env.Sonarr.GetPosterURL(*c.selectedTVShow)
-	if c.selectedTVShow.RemotePoster != "" {
-		photo := &tb.Photo{File: tb.FromURL(c.selectedTVShow.RemotePoster)}
-		_, err = c.env.Bot.Send(m.Sender, photo)
-		if err != nil {
-			log.Fatalf("message send error: %v", err)
-			return
-		}
-	}
+	//c.selectedTVShow.RemotePoster = c.env.Sonarr.GetPosterURL(*c.selectedTVShow)
+	//if c.selectedTVShow.RemotePoster != "" {
+	//	photo := &tb.Photo{File: tb.FromURL(c.selectedTVShow.RemotePoster)}
+	//	_, err = c.env.Bot.Send(m.Sender, photo)
+	//	if err != nil {
+	//		log.Fatalf("message send error: %v", err)
+	//		return
+	//	}
+	//}
 
 	// Notify User
 	Send(c.env.Bot, m.Sender, "TV Show has been added!")
